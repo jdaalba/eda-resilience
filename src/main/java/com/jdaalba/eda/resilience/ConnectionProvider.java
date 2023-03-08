@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 public class ConnectionProvider {
 
@@ -20,7 +21,7 @@ public class ConnectionProvider {
     public static void main(String[] args) {
         var sql = """
                 INSERT INTO outbox (destination, message, class, emitted_on)
-                VALUES (?, ?, ?, NOW())
+                VALUES (?, ?, ?, ?)
                 """;
         try (
                 var connection = getConnection();
@@ -32,6 +33,7 @@ public class ConnectionProvider {
                             ps.setString(1, "users");
                             ps.setBytes(2, JsonMapper.asBytes(event));
                             ps.setString(3, event.getClass().getName());
+                            ps.setTimestamp(4, new Timestamp(event.emittedOn().toEpochMilli()));
                             ps.execute();
                         } catch (SQLException e) {
                             log.error("SQL Error: ", e);
